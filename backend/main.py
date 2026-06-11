@@ -17,8 +17,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-METEOMATICS_USERNAME = "acupt_oniceanu_andrei"
-METEOMATICS_PASSWORD = "Vs64k1lUz9NzxVdM0zWY"
 OPENWEATHERMAP_API_KEY = "9c0a9e6046e9de78fb85473bec071329"
 WEATHERAPI_API_KEY = "f56b9b1eaf734c8b8a6205654251011"
 VISUALCROSSING_API_KEY = "SLSH5GJLK2HRK9VR6ZQDSHCMD"
@@ -30,10 +28,6 @@ lon = 24.9668
 @app.get("/")
 def home():
     return {"message": "Backend FastAPI functioneaza!"}
-
-@app.get("/weather/meteomatics")
-def get_weather_meteomatics():
-    return get_meteomatics_forecast(lat, lon, METEOMATICS_USERNAME, METEOMATICS_PASSWORD)
 
 @app.get("/weather/openmeteo")
 def get_weather_openmeteo():
