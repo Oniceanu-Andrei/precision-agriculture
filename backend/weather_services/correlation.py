@@ -1,41 +1,43 @@
-def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data):
+def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, visualcrossing_data):
     
-    # Ponderi pentru fiecare sursa
     weights = {
-        "openmeteo": 0.50,
-        "openweathermap": 0.20,
-        "weatherapi": 0.30
+        "openmeteo": 0.30,
+        "openweathermap": 0.10,
+        "weatherapi": 0.20,
+        "visualcrossing": 0.40
     }
     
-    # Extragem forecast-urile din fiecare sursa
     openmeteo_forecast = openmeteo_data.get("forecast", []) if openmeteo_data.get("status") == "success" else []
     openweathermap_forecast = openweathermap_data.get("forecast", []) if openweathermap_data.get("status") == "success" else []
     weatherapi_forecast = weatherapi_data.get("forecast", []) if weatherapi_data.get("status") == "success" else []
+    visualcrossing_forecast = visualcrossing_data.get("forecast", []) if visualcrossing_data.get("status") == "success" else []
     
-    # Folosim orele din Open-Meteo ca referinta (are 24 ore)
     correlated = []
     
-    for i, om_item in enumerate(openmeteo_forecast):
-        hour = om_item["time"][11:13]  # extragem ora din timestamp
+    for om_item in openmeteo_forecast:
+        hour = om_item["time"][11:13]
         
-        # Gasim datele corespunzatoare din OpenWeatherMap (are date la fiecare 3 ore)
         owm_item = None
         for owm in openweathermap_forecast:
             if owm["time"][11:13] == hour:
                 owm_item = owm
                 break
         
-        # Gasim datele corespunzatoare din WeatherAPI
         wa_item = None
         for wa in weatherapi_forecast:
             if wa["time"][11:13] == hour:
                 wa_item = wa
                 break
         
-        # Calculam media ponderata pentru temperatura
+        vc_item = None
+        for vc in visualcrossing_forecast:
+            if vc["time"][11:13] == hour:
+                vc_item = vc
+                break
+        
+        # Temperatura
         temp_values = []
         temp_weights = []
-        
         if om_item:
             temp_values.append(om_item["temperature"])
             temp_weights.append(weights["openmeteo"])
@@ -45,15 +47,17 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data):
         if wa_item:
             temp_values.append(wa_item["temperature"])
             temp_weights.append(weights["weatherapi"])
+        if vc_item:
+            temp_values.append(vc_item["temperature"])
+            temp_weights.append(weights["visualcrossing"])
         
-        # Normalizam ponderile in caz ca lipseste o sursa
         total_weight = sum(temp_weights)
         if total_weight == 0:
             continue
             
         correlated_temp = sum(v * w for v, w in zip(temp_values, temp_weights)) / total_weight
         
-        # Calculam media ponderata pentru umiditate
+        # Umiditate
         humidity_values = []
         humidity_weights = []
         if om_item and "humidity" in om_item:
@@ -65,11 +69,14 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data):
         if wa_item and "humidity" in wa_item:
             humidity_values.append(wa_item["humidity"])
             humidity_weights.append(weights["weatherapi"])
+        if vc_item and "humidity" in vc_item:
+            humidity_values.append(vc_item["humidity"])
+            humidity_weights.append(weights["visualcrossing"])
         
         total_humidity_weight = sum(humidity_weights)
         correlated_humidity = sum(v * w for v, w in zip(humidity_values, humidity_weights)) / total_humidity_weight if total_humidity_weight > 0 else None
         
-        # Calculam media ponderata pentru vant
+        # Vant
         wind_values = []
         wind_weights = []
         if om_item and "wind_speed" in om_item:
@@ -81,19 +88,28 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data):
         if wa_item and "wind_speed" in wa_item:
             wind_values.append(wa_item["wind_speed"])
             wind_weights.append(weights["weatherapi"])
+        if vc_item and "wind_speed" in vc_item:
+            wind_values.append(vc_item["wind_speed"])
+            wind_weights.append(weights["visualcrossing"])
         
         total_wind_weight = sum(wind_weights)
         correlated_wind = sum(v * w for v, w in zip(wind_values, wind_weights)) / total_wind_weight if total_wind_weight > 0 else None
         
-        # Calculam media ponderata pentru precipitatii
+        # Precipitatii
         precip_values = []
         precip_weights = []
         if om_item and "precipitation" in om_item:
             precip_values.append(om_item["precipitation"])
             precip_weights.append(weights["openmeteo"])
+        if owm_item and "precipitation" in owm_item:
+            precip_values.append(owm_item["precipitation"])
+            precip_weights.append(weights["openweathermap"])
         if wa_item and "precipitation" in wa_item:
             precip_values.append(wa_item["precipitation"])
             precip_weights.append(weights["weatherapi"])
+        if vc_item and "precipitation" in vc_item:
+            precip_values.append(vc_item["precipitation"])
+            precip_weights.append(weights["visualcrossing"])
         
         total_precip_weight = sum(precip_weights)
         correlated_precip = sum(v * w for v, w in zip(precip_values, precip_weights)) / total_precip_weight if total_precip_weight > 0 else None
@@ -107,7 +123,8 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data):
             "sources_used": {
                 "openmeteo": om_item is not None,
                 "openweathermap": owm_item is not None,
-                "weatherapi": wa_item is not None
+                "weatherapi": wa_item is not None,
+                "visualcrossing": vc_item is not None
             }
         })
     
