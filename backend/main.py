@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from weather_services.openmeteo import get_openmeteo_forecast
-from weather_services.meteomatics import get_meteomatics_forecast
 from weather_services.openweathermap import get_openweathermap_forecast
 from weather_services.weatherapi import get_weatherapi_forecast
 from weather_services.visualcrossing import get_visualcrossing_forecast
