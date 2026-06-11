@@ -5,7 +5,7 @@ import {
 
 const isAndroid = /android/i.test(navigator.userAgent);
 const API_BASE = isAndroid 
-  ? 'http://192.168.100.98:8000'
+  ? 'https://precision-agriculture-production.up.railway.app'
   : 'http://localhost:8000';
 
 function App() {
