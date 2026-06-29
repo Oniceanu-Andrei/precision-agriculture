@@ -4,7 +4,8 @@ from weather_services.openmeteo import get_openmeteo_forecast
 from weather_services.openweathermap import get_openweathermap_forecast
 from weather_services.weatherapi import get_weatherapi_forecast
 from weather_services.visualcrossing import get_visualcrossing_forecast
-from weather_services.correlation import correlate_forecasts
+# Modificat: importăm din noul fișier de agregare
+from weather_services.aggregation import aggregate_forecasts
 
 
 app = FastAPI()
@@ -44,11 +45,13 @@ def get_weather_weatherapi():
 def get_weather_visualcrossing(lat: float = 45.9432, lon: float = 24.9668):
     return get_visualcrossing_forecast(lat, lon, VISUALCROSSING_API_KEY)
 
-@app.get("/weather/correlated")
-def get_correlated_weather(lat: float = 45.9432, lon: float = 24.9668):
+# Modificat: endpoint-ul devine /weather/aggregated, la fel și numele funcției
+@app.get("/weather/aggregated")
+def get_aggregated_weather(lat: float = 45.9432, lon: float = 24.9668):
     openmeteo = get_openmeteo_forecast(lat, lon)
     openweathermap = get_openweathermap_forecast(lat, lon, OPENWEATHERMAP_API_KEY)
     weatherapi = get_weatherapi_forecast(lat, lon, WEATHERAPI_API_KEY)
     visualcrossing = get_visualcrossing_forecast(lat, lon, VISUALCROSSING_API_KEY)
     
-    return correlate_forecasts(openmeteo, openweathermap, weatherapi, visualcrossing)
+    # Modificat: apelăm funcția de agregare
+    return aggregate_forecasts(openmeteo, openweathermap, weatherapi, visualcrossing)

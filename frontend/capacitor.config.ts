@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Platforma Meteo',
   webDir: 'build',
   server: {
-    androidScheme: 'http',
+    androidScheme: 'https',
     cleartext: true
   }
 };

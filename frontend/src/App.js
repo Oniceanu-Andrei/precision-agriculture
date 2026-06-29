@@ -20,7 +20,8 @@ const [searching, setSearching] = useState(false);
 const isMobile = window.innerWidth < 768;
 
 useEffect(() => {
-  fetch(`${API_BASE}/weather/correlated`)
+  // Modificat: /weather/correlated -> /weather/aggregated
+  fetch(`${API_BASE}/weather/aggregated`)
     .then(res => res.json())
     .then(data => {
       setWeatherData(data.forecast);
@@ -43,7 +44,8 @@ const handleUseLocation = () => {
           });
 
         setLoading(true);
-        fetch(`${API_BASE}/weather/correlated?lat=${latitude}&lon=${longitude}`)
+        // Modificat: /weather/correlated -> /weather/aggregated
+        fetch(`${API_BASE}/weather/aggregated?lat=${latitude}&lon=${longitude}`)
           .then(res => res.json())
           .then(data => {
             setWeatherData(data.forecast);
@@ -82,8 +84,9 @@ const handleCitySearch = async () => {
     setLocationName(cityName);
     setLoading(true);
     
+    // Modificat: /weather/correlated -> /weather/aggregated
     const weatherResponse = await fetch(
-      `${API_BASE}/weather/correlated?lat=${lat}&lon=${lon}`
+      `${API_BASE}/weather/aggregated?lat=${lat}&lon=${lon}`
     );
     const weatherData = await weatherResponse.json();
     setWeatherData(weatherData.forecast);
@@ -99,7 +102,8 @@ const handleCitySearch = async () => {
 
 useEffect(() => {
   const xhr = new XMLHttpRequest();
-  xhr.open('GET', `${API_BASE}/weather/correlated`);
+  // Modificat: /weather/correlated -> /weather/aggregated
+  xhr.open('GET', `${API_BASE}/weather/aggregated`);
   xhr.onload = () => {
     const data = JSON.parse(xhr.responseText);
     setWeatherData(data.forecast);
@@ -146,8 +150,9 @@ useEffect(() => {
         <h1 style={{ margin: 0, fontSize: "28px", color: "#38bdf8" }}>
           🌾 Platforma Meteo pentru Agricultura de Precizie
         </h1>
+        {/* Modificat mai jos: Date corelate -> Date agregate */}
         <p style={{ margin: "8px 0 0 0", color: "#94a3b8", fontSize: "14px" }}>
-          📍 {locationName} | Date corelate din 4 surse: Visual Crossing (40%) · Open-Meteo (30%) · WeatherAPI (20%) · OpenWeatherMap (10%)
+          📍 {locationName} | Date agregate din 4 surse: Visual Crossing (40%) · Open-Meteo (30%) · WeatherAPI (20%) · OpenWeatherMap (10%)
         </p>
         
         <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -311,7 +316,6 @@ useEffect(() => {
                   borderRadius: "10px",
                   padding: isMobile ? "10px" : "16px",
                   textAlign: "center"
-
                 }}
               >
                 <p style={{ margin: 0, color: "#64748b", fontSize: "12px" }}>

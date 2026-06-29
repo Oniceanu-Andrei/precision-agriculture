@@ -1,4 +1,4 @@
-def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, visualcrossing_data):
+def aggregate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, visualcrossing_data):
     
     weights = {
         "openmeteo": 0.30,
@@ -12,7 +12,7 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
     weatherapi_forecast = weatherapi_data.get("forecast", []) if weatherapi_data.get("status") == "success" else []
     visualcrossing_forecast = visualcrossing_data.get("forecast", []) if visualcrossing_data.get("status") == "success" else []
     
-    correlated = []
+    aggregated = []
     
     for om_item in openmeteo_forecast:
         hour = om_item["time"][11:13]
@@ -55,7 +55,7 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
         if total_weight == 0:
             continue
             
-        correlated_temp = sum(v * w for v, w in zip(temp_values, temp_weights)) / total_weight
+        aggregated_temp = sum(v * w for v, w in zip(temp_values, temp_weights)) / total_weight
         
         # Umiditate
         humidity_values = []
@@ -74,7 +74,7 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
             humidity_weights.append(weights["visualcrossing"])
         
         total_humidity_weight = sum(humidity_weights)
-        correlated_humidity = sum(v * w for v, w in zip(humidity_values, humidity_weights)) / total_humidity_weight if total_humidity_weight > 0 else None
+        aggregated_humidity = sum(v * w for v, w in zip(humidity_values, humidity_weights)) / total_humidity_weight if total_humidity_weight > 0 else None
         
         # Vant
         wind_values = []
@@ -90,10 +90,11 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
             wind_weights.append(weights["weatherapi"])
         if vc_item and "wind_speed" in vc_item:
             wind_values.append(vc_item["wind_speed"])
-            wind_weights.append(weights["visualcrossing"])
+            weights_wind = weights["visualcrossing"]
+            wind_weights.append(weights_wind)
         
         total_wind_weight = sum(wind_weights)
-        correlated_wind = sum(v * w for v, w in zip(wind_values, wind_weights)) / total_wind_weight if total_wind_weight > 0 else None
+        aggregated_wind = sum(v * w for v, w in zip(wind_values, wind_weights)) / total_wind_weight if total_wind_weight > 0 else None
         
         # Precipitatii
         precip_values = []
@@ -112,14 +113,14 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
             precip_weights.append(weights["visualcrossing"])
         
         total_precip_weight = sum(precip_weights)
-        correlated_precip = sum(v * w for v, w in zip(precip_values, precip_weights)) / total_precip_weight if total_precip_weight > 0 else None
+        aggregated_precip = sum(v * w for v, w in zip(precip_values, precip_weights)) / total_precip_weight if total_precip_weight > 0 else None
         
-        correlated.append({
+        aggregated.append({
             "time": om_item["time"],
-            "temperature": round(correlated_temp, 1),
-            "humidity": round(correlated_humidity, 1) if correlated_humidity is not None else None,
-            "wind_speed": round(correlated_wind, 1) if correlated_wind is not None else None,
-            "precipitation": round(correlated_precip, 2) if correlated_precip is not None else None,
+            "temperature": round(aggregated_temp, 1),
+            "humidity": round(aggregated_humidity, 1) if aggregated_humidity is not None else None,
+            "wind_speed": round(aggregated_wind, 1) if aggregated_wind is not None else None,
+            "precipitation": round(aggregated_precip, 2) if aggregated_precip is not None else None,
             "sources_used": {
                 "openmeteo": om_item is not None,
                 "openweathermap": owm_item is not None,
@@ -130,7 +131,7 @@ def correlate_forecasts(openmeteo_data, openweathermap_data, weatherapi_data, vi
     
     return {
         "status": "success",
-        "source": "Correlated",
+        "source": "Aggregated",
         "weights": weights,
-        "forecast": correlated
+        "forecast": aggregated
     }
